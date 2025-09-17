@@ -1,0 +1,180 @@
+S3 = require('@aws-sdk/clients/s3');
+// Pre-signed URLS
+const S3Presigner = require("@aws-sdk/s3-request-presigner");
+// Can change bucket name to whatever 
+const bucketName = 'n11988819-a2-db';
+// Tagging - can change to whatever
+const qutUsername = 'n11988819@qut.edu.au'
+const purpose = 'a2 db storage'
+// Adding to the bucker - change to whatever
+const objectKey = 'username'
+const objectValue = 'data' 
+// To be used in EC2 instance
+// npm init -y
+// npm i @aws-sdk/client-s3
+// npm i dotenv
+
+async function s3_db(){
+
+    // Create bucket
+    s3Client = new S3.S3Client({ region: 'ap-southeast-2' });
+
+    command = new S3.CreateBucketCommand({
+        Bucket: bucketName
+    });
+
+    try {
+        const response = await s3Client.send(command);
+        console.log(response.Location)
+    } catch (err) {
+        console.log(err);
+    }
+    // Tag bucket
+    command = new S3.PutBucketTaggingCommand({
+    Bucket: bucketName,
+    Tagging: {
+        TagSet: [
+            {
+                Key: 'qut-username',
+                Value: qutUsername,
+            },
+            {
+                Key: 'purpose',
+                Value: purpose
+            }
+        ]
+        }
+        });
+        
+    try {
+            const response = await s3Client.send(command);
+            console.log(response)
+        } catch (err) {
+            console.log(err);
+        } 
+
+    // Put object into bucket
+    try {
+        const response = await s3Client.send(
+            new S3.PutObjectCommand({
+                Bucket: bucketName,
+                Key: objectKey,
+                Body: objectValue
+            })
+        );
+        console.log(response);
+    } catch (err) {
+        console.log(err);
+    }
+
+    // Read object from bucket
+    try {
+        const response = await s3Client.send(
+            new S3.GetObjectCommand({
+                Bucket: bucketName,
+                Key: objectKey,
+            })
+        );
+        str = await response.Body.transformToString();
+        console.log(str);
+    } catch (err) {
+        console.log(err);
+    }
+    // Generate a pre-signed URL for the object
+    try {
+    const command = new S3.GetObjectCommand({
+            Bucket: bucketName,
+            Key: objectKey,
+        });
+    const presignedURL = await S3Presigner.getSignedUrl(s3Client, command, {expiresIn: 3600} );
+    
+    console.log('Pre-signed URL to get the object:')
+    console.log(presignedURL);
+
+    
+    const response = await fetch(presignedURL);
+    const object = await response.text();
+    console.log('Object retrieved with pre-signed URL: ');
+    console.log(object);
+
+    } catch (err) {
+        console.log(err);
+    }
+    // Generate a pre-signed URL to put (upload) an object
+    await fetch(presignedURL, { method: "PUT", body: objectValue});
+
+}
+
+// This would be for in the EC2 instance
+// npm init -y
+// npm i @aws-sdk/client-dynamodb
+// npm i @aws-sdk/lib-dynamodb
+// npm i dotenv
+
+require('dotenv').config();
+const Dynamodb = require('@aws-sdk/client-dynamodb');
+const DynamoDBLib = require('@aws-sdk/lib-dynamodb');
+
+const tableName = 'a2-db-table';
+// Change to whatever you want to sort by
+const sortKey = 'username';
+
+async function dynamodb_db(){
+    const client = new Dynamodb.DynamoDBClient({ region: 'ap-southeast-2' });
+    const docClient = DynamoDBLib.DynamoDBDocumentClient.from(client);
+
+    command = new Dynamodb.CreateTableCommand({
+        TableName: tableName,
+        AttributeDefinitions: [
+            { AttributeName: "qut-username", AttributeType: 'S' },
+            { AttributeName: sortKey, AttributeType: 'S' }
+        ],
+        KeySchema: [
+            { AttributeName: "qut-username", KeyType: 'HASH' },
+            { AttributeName: sortKey, KeyType: 'RANGE' }
+        ],
+        ProvisionedThroughput: {
+            ReadCapacityUnits: 1,
+            WriteCapacityUnits: 1,
+        },
+    });
+    try {
+        const repsone = await client.send(command);
+        console.loge("Create Table comand reponse: ", repsone);
+    } catch (err) {
+        console.log("Error", err);
+    }
+
+    // Put item into table
+    command = new DynamoDBLib.PutCommand({
+        TableName: tableName,
+        Item: {
+            "qut-username": qutUsername,
+            // Placeholders
+            [sortKey]: 'key',
+            "data": "some data"
+        }
+    });
+
+    try {
+        const repsone = await docClient.send(command);
+        console.log("Put comand reponse: ", repsone);
+    } catch (err) {
+        console.log("Error", err);
+    }
+
+    // Get item from table
+    command = new DynamoDBLib.GetCommand({
+        TableName: tableName,
+        Key: {
+            "qut-username": qutUsername,
+            [sortKey]: 'key'        
+        }
+    });
+
+    try { const repsone = await docClient.send(command);
+        console.log("Item data: ", repsone.Item);
+    } catch (err) {
+        console.log("Error", err);
+    }
+}
