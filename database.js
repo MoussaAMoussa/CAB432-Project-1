@@ -57,7 +57,7 @@ async function s3_db(){
 
 }
 
-export async function bucket_pull(objectKey, bucketName){
+export async function bucket_pull(objectKey, objectValue, bucketName){
     // Read object from bucket
     try {
         const response = await s3Client.send(
@@ -155,7 +155,7 @@ async function dynamodb_db(){
 
 }
 
-export async function dynamo_push(tableName, sortKey){
+export async function dynamo_push(tableName, sortKey, username, data){
     // Put item into table
     command = new DynamoDBLib.PutCommand({
         TableName: tableName,
@@ -175,7 +175,7 @@ export async function dynamo_push(tableName, sortKey){
     }
 }
 
-export async function dynamo_pull(){
+export async function dynamo_pull(tableName, sortKey, username, data){
     // Get item from table
     command = new DynamoDBLib.GetCommand({
         TableName: tableName,
