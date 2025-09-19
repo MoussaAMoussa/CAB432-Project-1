@@ -53,20 +53,11 @@ async function s3_db(){
             console.log(err);
         } 
 
-    // Put object into bucket
-    try {
-        const response = await s3Client.send(
-            new S3.PutObjectCommand({
-                Bucket: bucketName,
-                Key: objectKey,
-                Body: objectValue
-            })
-        );
-        console.log(response);
-    } catch (err) {
-        console.log(err);
-    }
 
+
+}
+
+export async function bucket_pull(objectKey, objectValue, bucketName){
     // Read object from bucket
     try {
         const response = await s3Client.send(
@@ -102,8 +93,24 @@ async function s3_db(){
     }
     // Generate a pre-signed URL to put (upload) an object
     await fetch(presignedURL, { method: "PUT", body: objectValue});
-
 }
+
+export async function bucket_push(objectKey, objectValue, bucketName){
+    // Put object into bucket
+    try {
+        const response = await s3Client.send(
+            new S3.PutObjectCommand({
+                Bucket: bucketName,
+                Key: objectKey,
+                Body: objectValue
+            })
+        );
+        console.log(response);
+    } catch (err) {
+        console.log(err);
+    }
+}
+
 
 // This would be for in the EC2 instance
 // npm init -y
@@ -145,6 +152,10 @@ async function dynamodb_db(){
         console.log("Error", err);
     }
 
+
+}
+
+export async function dynamo_push(tableName, sortKey, username, data){
     // Put item into table
     command = new DynamoDBLib.PutCommand({
         TableName: tableName,
@@ -162,7 +173,9 @@ async function dynamodb_db(){
     } catch (err) {
         console.log("Error", err);
     }
+}
 
+export async function dynamo_pull(tableName, sortKey, username, data){
     // Get item from table
     command = new DynamoDBLib.GetCommand({
         TableName: tableName,
