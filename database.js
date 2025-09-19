@@ -152,6 +152,10 @@ async function dynamodb_db(){
         console.log("Error", err);
     }
 
+
+}
+
+async function dynamo_push(tableName, sortKey){
     // Put item into table
     command = new DynamoDBLib.PutCommand({
         TableName: tableName,
@@ -169,7 +173,9 @@ async function dynamodb_db(){
     } catch (err) {
         console.log("Error", err);
     }
+}
 
+async function dynamo_pull(){
     // Get item from table
     command = new DynamoDBLib.GetCommand({
         TableName: tableName,
