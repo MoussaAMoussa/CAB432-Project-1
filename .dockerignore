@@ -1,7 +1,0 @@
-node_modules
-npm-debug.log
-storage/tmp
-storage/uploads
-.git
-.DS_Store
-
