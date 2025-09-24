@@ -1,14 +1,20 @@
-S3 = require('@aws-sdk/clients/s3');
+const { 
+    S3Client, 
+    CreateBucketCommand, 
+    PutBucketTaggingCommand, 
+    GetObjectCommand, 
+    PutObjectCommand 
+} = require("@aws-sdk/client-s3");
 // Pre-signed URLS
 const S3Presigner = require("@aws-sdk/s3-request-presigner");
-// Can change bucket name to whatever 
+// Can change bucket name to whatever
 const bucketName = 'n11988819-a2-db';
 // Tagging - can change to whatever
 const qutUsername = 'n11988819@qut.edu.au'
 const purpose = 'a2 db storage'
 // Adding to the bucker - change to whatever
 const objectKey = 'username'
-const objectValue = 'data' 
+const objectValue = 'data'
 // To be used in EC2 instance
 // npm init -y
 // npm i @aws-sdk/client-s3
@@ -45,19 +51,21 @@ async function s3_db(){
         ]
         }
         });
-        
+
     try {
             const response = await s3Client.send(command);
             console.log(response)
         } catch (err) {
             console.log(err);
-        } 
+        }
 
 
 
 }
 
-export async function bucket_pull(objectKey, objectValue, bucketName){
+s3_db();
+
+async function bucket_pull(objectKey, objectValue, bucketName){
     // Read object from bucket
     try {
         const response = await s3Client.send(
@@ -78,11 +86,11 @@ export async function bucket_pull(objectKey, objectValue, bucketName){
             Key: objectKey,
         });
     const presignedURL = await S3Presigner.getSignedUrl(s3Client, command, {expiresIn: 3600} );
-    
+
     console.log('Pre-signed URL to get the object:')
     console.log(presignedURL);
 
-    
+
     const response = await fetch(presignedURL);
     const object = await response.text();
     console.log('Object retrieved with pre-signed URL: ');
@@ -95,7 +103,7 @@ export async function bucket_pull(objectKey, objectValue, bucketName){
     await fetch(presignedURL, { method: "PUT", body: objectValue});
 }
 
-export async function bucket_push(objectKey, objectValue, bucketName){
+async function bucket_push(objectKey, objectValue, bucketName){
     // Put object into bucket
     try {
         const response = await s3Client.send(
@@ -111,6 +119,8 @@ export async function bucket_push(objectKey, objectValue, bucketName){
     }
 }
 
+
+module.exports = { bucket_pull, bucket_push};
 
 // This would be for in the EC2 instance
 // npm init -y
@@ -155,7 +165,9 @@ async function dynamodb_db(){
 
 }
 
-export async function dynamo_push(tableName, sortKey, username, data){
+dynamodb_db();
+
+async function dynamo_push(tableName, sortKey, username, data){
     // Put item into table
     command = new DynamoDBLib.PutCommand({
         TableName: tableName,
@@ -175,13 +187,13 @@ export async function dynamo_push(tableName, sortKey, username, data){
     }
 }
 
-export async function dynamo_pull(tableName, sortKey, username, data){
+async function dynamo_pull(tableName, sortKey, username, data){
     // Get item from table
     command = new DynamoDBLib.GetCommand({
         TableName: tableName,
         Key: {
             "qut-username": qutUsername,
-            [sortKey]: 'key'        
+            [sortKey]: 'key'
         }
     });
 
@@ -191,3 +203,5 @@ export async function dynamo_pull(tableName, sortKey, username, data){
         console.log("Error", err);
     }
 }
+
+module.exports = { dynamo_push, dynamo_pull };
