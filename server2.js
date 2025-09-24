@@ -6,14 +6,12 @@ const cors = require("cors");
 const path = require("path");
 
 const authRoutes = require("./src/routes/auth");
-const processingRoutes = require("./src/routes/processing");
+// Problem 
+//const processingRoutes = require("./src/routes/processing");
 
-<<<<<<< HEAD
 const {signup, confirm, authenticate} = require("./src/utils/cognito");
  
 
-=======
->>>>>>> master
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -25,11 +23,11 @@ app.use(morgan("dev"));
 // Mount routes
 // All auth endpoints live under /api/v1/auth
 app.use("/api/v1/auth", authRoutes);
+// Problem
 // Processing endpoints live under /api/v1 (e.g., /api/v1/process, /api/v1/results)
 app.use("/api/v1", processingRoutes);
 
-<<<<<<< HEAD
-// Login endpoint
+// Signup endpoint
 app.post("/api/v1/signup", async (req, res, next) => { 
   const { username, password, email } = req.body;
   try {
@@ -67,8 +65,6 @@ app.post("/api/v1/login", async (req, res, next) => {
 }); 
 
 
-=======
->>>>>>> master
 // Health check or catch-all
 app.get("/", (req, res) => {
   res.json({ message: "API is running" });
