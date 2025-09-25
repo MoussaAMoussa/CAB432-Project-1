@@ -6,10 +6,16 @@ const Cognito = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require("crypto");
 const { token } = require("morgan");
 
-// Move these to secrets manager :)
-const clientId = "j9ag56qba91retp7nvv7q32b7";
-const clientSecret = "1n4t6r7695rjb1d4vehi8ps1839n7p7uugo50me07vur935f0iam";
- 
+const { getSecrets } = require("../utils/secrets");
+
+let clientId;
+let clientSecret;
+
+(async () => {
+  const secrets = await getSecrets();
+  clientId = secrets.clientId;
+  clientSecret = secrets.clientSecret;
+})();
 
 function secretHash(clientId, clientSecret, username) {
   const hasher = crypto.createHmac('sha256', clientSecret);
