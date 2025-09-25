@@ -6,8 +6,7 @@ const cors = require("cors");
 const path = require("path");
 
 const authRoutes = require("./src/routes/auth");
-// Problem 
-//const processingRoutes = require("./src/routes/processing");
+const processingRoutes = require("./src/routes/processing");
 
 const {signup, confirm, authenticate} = require("./src/utils/cognito");
  
@@ -23,7 +22,7 @@ app.use(morgan("dev"));
 // Mount routes
 // All auth endpoints live under /api/v1/auth
 app.use("/api/v1/auth", authRoutes);
-// Problem
+
 // Processing endpoints live under /api/v1 (e.g., /api/v1/process, /api/v1/results)
 app.use("/api/v1", processingRoutes);
 
