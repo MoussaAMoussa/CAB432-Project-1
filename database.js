@@ -5,6 +5,7 @@ const {
     GetObjectCommand, 
     PutObjectCommand 
 } = require("@aws-sdk/client-s3");
+
 // Pre-signed URLS
 const S3Presigner = require("@aws-sdk/s3-request-presigner");
 // Can change bucket name to whatever
@@ -63,64 +64,7 @@ async function s3_db(){
 
 }
 
-s3_db();
 
-async function bucket_pull(objectKey, objectValue, bucketName){
-    // Read object from bucket
-    try {
-        const response = await s3Client.send(
-            new S3.GetObjectCommand({
-                Bucket: bucketName,
-                Key: objectKey,
-            })
-        );
-        str = await response.Body.transformToString();
-        console.log(str);
-    } catch (err) {
-        console.log(err);
-    }
-    // Generate a pre-signed URL for the object
-    try {
-    const command = new S3.GetObjectCommand({
-            Bucket: bucketName,
-            Key: objectKey,
-        });
-    const presignedURL = await S3Presigner.getSignedUrl(s3Client, command, {expiresIn: 3600} );
-
-    console.log('Pre-signed URL to get the object:')
-    console.log(presignedURL);
-
-
-    const response = await fetch(presignedURL);
-    const object = await response.text();
-    console.log('Object retrieved with pre-signed URL: ');
-    console.log(object);
-
-    } catch (err) {
-        console.log(err);
-    }
-    // Generate a pre-signed URL to put (upload) an object
-    await fetch(presignedURL, { method: "PUT", body: objectValue});
-}
-
-async function bucket_push(objectKey, objectValue, bucketName){
-    // Put object into bucket
-    try {
-        const response = await s3Client.send(
-            new S3.PutObjectCommand({
-                Bucket: bucketName,
-                Key: objectKey,
-                Body: objectValue
-            })
-        );
-        console.log(response);
-    } catch (err) {
-        console.log(err);
-    }
-}
-
-
-module.exports = { bucket_pull, bucket_push};
 
 // This would be for in the EC2 instance
 // npm init -y
@@ -165,43 +109,3 @@ async function dynamodb_db(){
 
 }
 
-dynamodb_db();
-
-async function dynamo_push(tableName, sortKey, username, data){
-    // Put item into table
-    command = new DynamoDBLib.PutCommand({
-        TableName: tableName,
-        Item: {
-            "qut-username": qutUsername,
-            // Placeholders
-            [sortKey]: 'key',
-            "data": "some data"
-        }
-    });
-
-    try {
-        const repsone = await docClient.send(command);
-        console.log("Put comand reponse: ", repsone);
-    } catch (err) {
-        console.log("Error", err);
-    }
-}
-
-async function dynamo_pull(tableName, sortKey, username, data){
-    // Get item from table
-    command = new DynamoDBLib.GetCommand({
-        TableName: tableName,
-        Key: {
-            "qut-username": qutUsername,
-            [sortKey]: 'key'
-        }
-    });
-
-    try { const repsone = await docClient.send(command);
-        console.log("Item data: ", repsone.Item);
-    } catch (err) {
-        console.log("Error", err);
-    }
-}
-
-module.exports = { dynamo_push, dynamo_pull };
