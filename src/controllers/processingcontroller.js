@@ -4,6 +4,8 @@ const { s3 } = require("../config/aws.js");
 const { v4: uuidv4 } = require("uuid");
 const { PutItemCommand, QueryCommand, GetItemCommand } = require("@aws-sdk/client-dynamodb");
 const { dynamodb } = require("../config/aws.js");
+// Pre-signed URLS
+const S3Presigner = require("@aws-sdk/s3-request-presigner");
 
 // NOTE: keep these commented until you implement them, or remove to avoid lints
 // const audioService = require("../services/audioService");
@@ -83,8 +85,17 @@ exports.getResult = async (req, res) => {
 
 exports.downloadResult = async (req, res) => {
   try {
-    // TODO: generate a pre-signed URL for an output key and redirect
-    return res.status(501).json({ error: "Download not implemented yet" });
+    const command = new S3.GetObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: `uploads/${jobId}-${originalName}`,
+    });
+
+    const presignURL = await S3Presigner.getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    console.log("Presigned URL: ", presignURL);
+    const response = await fetch(presignURL);
+    const object = await response.text();
+    console.log("Object: ", object);
+
   } catch (err) {
     console.error("[downloadResult] error:", err);
     return res.status(500).json({ error: "Failed to download" });
