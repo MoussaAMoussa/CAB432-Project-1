@@ -68,6 +68,10 @@ app.post("/api/v1/login", async (req, res, next) => {
 }); 
 
 
+// Admin functionality: Delete user from cognito
+app.delete("/api/v1/admin/delete-user", async (req, res, next) => {
+});
+
 // Health check or catch-all
 app.get("/", (req, res) => {
   res.json({ message: "API is running" });
