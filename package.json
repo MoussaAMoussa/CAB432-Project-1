@@ -1,0 +1,32 @@
+{
+  "name": "cab432-project-1",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server2.js",
+  "scripts": {
+    "start": "node server2.js",
+    "dev": "nodemon server2.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.894.0",
+    "@aws-sdk/client-dynamodb": "^3.894.0",
+    "@aws-sdk/client-s3": "^3.894.0",
+    "@aws-sdk/client-secrets-manager": "^3.896.0",
+    "@aws-sdk/client-ssm": "^3.896.0",
+    "@aws-sdk/client-sts": "^3.896.0",
+    "@aws-sdk/s3-request-presigner": "^3.894.0",
+    "aws-jwt-verify": "^5.1.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.2.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
