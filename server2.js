@@ -30,7 +30,7 @@ app.use("/api/v1", processingRoutes);
 app.post("/api/v1/signup", async (req, res, next) => { 
   const { username, password, email } = req.body;
   try {
-    const result = await signup(username, password, email);
+    const result = await signup(username, password, email, "user");
     res.json({ message: "User signed up successfully", result });
   } catch (err) {
     console.error(err);
@@ -56,8 +56,12 @@ app.post("/api/v1/login", async (req, res, next) => {
   const { username, password } = req.body;
   try {
     const result = await authenticate(username, password);
-    res.json({ message: "User authenticated successfully", result });
-  } catch (err) {
+    if (usertype === "admin") {
+      res.json({ message: "Admin user authenticated successfully", result });
+    } else {
+      res.json({ message: "User authenticated successfully", result });
+    }
+    } catch (err) {
     console.error(err);
     res.status(400).json({ error: err.message });
   }
