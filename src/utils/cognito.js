@@ -1,6 +1,9 @@
 // COGNITO AWS n11988819-a2
 // ap-southeast-2_VNZ0oJBaV user pool id
 
+
+// user groups
+
 const jwt = require("aws-jwt-verify");
 const Cognito = require("@aws-sdk/client-cognito-identity-provider");
 const crypto = require("crypto");
@@ -23,7 +26,8 @@ function secretHash(clientId, clientSecret, username) {
   return hasher.digest('base64');
 }
 
-async function signup(username, password, email) {
+async function signup(username, password, email, usertype) {
+  //TODO add admin group in sign up func
   console.log("Signing up user");
   const client = new Cognito.CognitoIdentityProviderClient({ region: 'ap-southeast-2' });
   const command = new Cognito.SignUpCommand({
@@ -35,7 +39,16 @@ async function signup(username, password, email) {
   });
   const res = await client.send(command);
   console.log(res);
-}
+
+  if (usertype === "admin") {
+    const groupCMD = new Cognito.AdminAddUserToGroupCommand({
+      UserPoolId: "ap-southeast-2_VNZ0oJBaV",
+      Username: username,
+      GroupName: "admin",
+    });
+  const res2 = await client.send(groupCMD);
+  console.log(res2);
+}}
 
 async function confirm(username, confirmationCode) {
     const client = new Cognito.CognitoIdentityProviderClient({ region: 'ap-southeast-2' });
