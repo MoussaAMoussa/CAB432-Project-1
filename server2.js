@@ -84,8 +84,7 @@ app.use((err, req, res, next) => {
     error: { code: "INTERNAL", message: err.message || "An internal error occurred" },
   });
 });
-
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
 
