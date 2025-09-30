@@ -6,7 +6,7 @@ const router = express.Router();
 // returns info about the currently authenticated user
 router.get("/me", requireAuth, (req, res) => {
    res.json({
-	id: req.iser.id,
+	id: req.user.id,
 	username: req.user.username,
 	role: req.user.role,
 	});
