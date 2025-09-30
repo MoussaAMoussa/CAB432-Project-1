@@ -6,8 +6,7 @@ const {
     PutObjectCommand 
 } = require("@aws-sdk/client-s3");
 
-// Pre-signed URLS
-const S3Presigner = require("@aws-sdk/s3-request-presigner");
+
 // Can change bucket name to whatever
 const bucketName = 'n11988819-a2-db';
 // Tagging - can change to whatever
