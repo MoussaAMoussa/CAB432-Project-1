@@ -29,7 +29,9 @@ const nowISO = () => new Date().toISOString();
  * Buffer → temp file → FFmpeg → upload variants → update Dynamo → respond complete
  */
 exports.processFile = async (req, res) => {
+ 
   try {
+    
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
     if (!S3_BUCKET) return res.status(500).json({ error: "S3 bucket not configured" });
 
@@ -49,19 +51,18 @@ exports.processFile = async (req, res) => {
     }));
 
     // B) Create/seed job record as processing
+    const outputKeys = [];
     if (JOBS_TABLE) {
       await dynamodb.send(new PutItemCommand({
         TableName: JOBS_TABLE,
         Item: {
-          Item: {
-            "qut-username": { S: req.user?.email || "anonymous" }, // partition key
-            "username": { S: jobId }, // or some unique identifier per user/job
-            status:     { S: "processing" },
-            inputKey:   { S: inputKey },
-            outputKeys: { L: [] },
-            createdAt:  { S: nowISO() },
-            updatedAt:  { S: nowISO() },
-          },
+          "qut-username": { S: req.user?.email || "anonymous" },
+          "username": { S: jobId },
+          status: { S: "processing" },
+          inputKey: { S: inputKey || "unknown" },
+          outputKeys: { L: (outputKeys || []).map(k => ({ S: k })) },
+          createdAt: { S: nowISO() },
+          updatedAt: { S: nowISO() },
         },
       }));
     }
@@ -80,7 +81,7 @@ exports.processFile = async (req, res) => {
     });
 
     // E) Upload each variant to S3 and collect keys
-    const outputKeys = [];
+    
     for (const v of variants) {
       const outKey = `results/${jobId}/${v.name}`;
       const fileStream = fs.createReadStream(v.filePath);
@@ -100,7 +101,10 @@ exports.processFile = async (req, res) => {
     if (JOBS_TABLE) {
       await dynamodb.send(new UpdateItemCommand({
         TableName: JOBS_TABLE,
-        Key: { jobId: { S: jobId } },
+        Key: {
+  "qut-username": { S: req.user?.email || "anonymous" }, // HASH key
+  "username": { S: jobId }                               // RANGE key
+},
         UpdateExpression: "SET #s = :s, outputKeys = :o, updatedAt = :u",
         ExpressionAttributeNames: { "#s": "status" },
         ExpressionAttributeValues: {
@@ -125,15 +129,19 @@ exports.processFile = async (req, res) => {
     try {
       if (JOBS_TABLE) {
         await dynamodb.send(new UpdateItemCommand({
-          TableName: JOBS_TABLE,
-          Key: { jobId: { S: req?.params?.id || "unknown" } }, // harmless if missing
-          UpdateExpression: "SET #s = :s, updatedAt = :u",
-          ExpressionAttributeNames: { "#s": "status" },
-          ExpressionAttributeValues: {
-            ":s": { S: "failed" },
-            ":u": { S: nowISO() },
-          },
-        }));
+            TableName: JOBS_TABLE,
+            Key: {
+              "qut-username": { S: req.user?.email || "anonymous" }, // HASH key
+              "username": { S: jobId }                               // RANGE key
+            },
+            UpdateExpression: "SET #s = :s, outputKeys = :o, updatedAt = :u",
+            ExpressionAttributeNames: { "#s": "status" },
+            ExpressionAttributeValues: {
+              ":s": { S: "complete" },
+              ":o": { L: outputKeys.map(k => ({ S: k })) },
+              ":u": { S: nowISO() },
+            },
+          }));
       }
     } catch {}
     return res.status(500).json({ error: "Processing failed" });
@@ -175,7 +183,10 @@ exports.getResult = async (req, res) => {
   try {
     const out = await dynamodb.send(new GetItemCommand({
       TableName: JOBS_TABLE,
-      Key: { jobId: { S: id } },
+      Key: {
+  "qut-username": { S: out.Item["qut-username"].S }, // or req.user.email if auth is applied
+  "username": { S: id }
+},
     }));
 
     if (!out.Item) return res.status(404).json({ error: "Job not found" });
@@ -204,7 +215,10 @@ exports.downloadResult = async (req, res) => {
   try {
     const out = await dynamodb.send(new GetItemCommand({
       TableName: JOBS_TABLE,
-      Key: { jobId: { S: id } },
+      Key: {
+  "qut-username": { S: out.Item["qut-username"].S }, // or req.user.email if auth is applied
+  "username": { S: id }
+},
     }));
     if (!out.Item) return res.status(404).json({ error: "Job not found" });
 
