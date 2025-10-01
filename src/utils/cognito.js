@@ -10,6 +10,7 @@ const crypto = require("crypto");
 const { token } = require("morgan");
 
 const { getSecrets } = require("../utils/secrets");
+const { get } = require("http");
 
 let clientId;
 let clientSecret;
@@ -34,6 +35,11 @@ async function initCognito() {
       clientId,
     });
   }
+}
+
+async function getAccessVerifier() {
+  if (!accessVerifier) await initCognito();
+  return accessVerifier;
 }
 
 async function ensureCognito() {
@@ -113,4 +119,4 @@ async function authenticate(username, password) {
 }
 
 
-module.exports = { signup, confirm, authenticate };
+module.exports = { signup, confirm, authenticate, getAccessVerifier, ensureCognito };
