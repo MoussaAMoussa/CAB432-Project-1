@@ -3,7 +3,8 @@ const fs = require("fs");
 const fsp = require("fs/promises");
 const path = require("path");
 const os = require("os");
-const { v4: uuidv4 } = require("uuid");
+import { v4 as uuidv4 } from "uuid";
+
 
 const { PutObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
 const {
