@@ -227,20 +227,24 @@ exports.downloadResult = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Step 1: Fetch the job record from DynamoDB
     const out = await dynamodb.send(new GetItemCommand({
       TableName: JOBS_TABLE,
       Key: {
-  "qut-username": { S: out.Item["qut-username"].S }, // or req.user.email if auth is applied
-  "username": { S: id }
-},
+        "qut-username": { S: req.user?.email || "anonymous" }, // your HASH key
+        "username": { S: id }                                   // your RANGE key
+      },
     }));
+
     if (!out.Item) return res.status(404).json({ error: "Job not found" });
 
+    // Step 2: Extract outputKeys
     const outputKeys = (out.Item.outputKeys?.L || []).map(x => x.S);
     if (outputKeys.length === 0) {
       return res.status(409).json({ error: "No outputs available for this job yet" });
     }
 
+    // Step 3: Generate presigned URLs
     const urls = await Promise.all(
       outputKeys.map(async (Key) => {
         const cmd = new GetObjectCommand({ Bucket: S3_BUCKET, Key });
@@ -250,11 +254,13 @@ exports.downloadResult = async (req, res) => {
     );
 
     return res.json({ jobId: id, urls });
+
   } catch (err) {
     console.error("[downloadResult] error:", err);
     return res.status(500).json({ error: "Failed to generate download URLs" });
   }
 };
+
 
 
 exports.downloadAllResults = async (_req, res) => {
