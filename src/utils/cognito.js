@@ -13,12 +13,33 @@ const { getSecrets } = require("../utils/secrets");
 
 let clientId;
 let clientSecret;
+let idVerifier;      
+let accessVerifier;
 
-(async () => {
-  const secrets = await getSecrets();
-  clientId = secrets.clientId;
-  clientSecret = secrets.clientSecret;
-})();
+async function initCognito() {
+  if (!clientId) {
+    const secrets = await getSecrets();
+    clientId = secrets.clientId;
+    clientSecret = secrets.clientSecret;
+
+    accessVerifier = jwt.CognitoJwtVerifier.create({
+      userPoolId: "ap-southeast-2_VNZ0oJBaV",
+      tokenUse: "access",
+      clientId,
+    });
+
+    idVerifier = jwt.CognitoJwtVerifier.create({
+      userPoolId: "ap-southeast-2_VNZ0oJBaV",
+      tokenUse: "id",
+      clientId,
+    });
+  }
+}
+
+async function ensureCognito() {
+  if (!clientId || !clientSecret) await initCognito();
+}
+
 
 function secretHash(clientId, clientSecret, username) {
   const hasher = crypto.createHmac('sha256', clientSecret);
@@ -62,19 +83,10 @@ async function confirm(username, confirmationCode) {
   res2 = await client.send(command2);
 }
 
-const accessVerifier = jwt.CognitoJwtVerifier.create({
-    userPoolId: "ap-southeast-2_VNZ0oJBaV",
-    tokenUse: "access",
-    clientId: clientId,
-  });
 
-const idVerifier = jwt.CognitoJwtVerifier.create({
-    userPoolId: "ap-southeast-2_VNZ0oJBaV",
-    tokenUse: "id",
-    clientId: clientId,
-    });
 
 async function authenticate(username, password) {
+  await ensureCognito();
     const client = new Cognito.CognitoIdentityProviderClient({ region: 'ap-southeast-2' });
 
     console.log("Getting auth token");
