@@ -177,31 +177,45 @@ exports.history = async (req, res) => {
  * GET /results/:id — Return job metadata (status, keys)
  */
 exports.getResult = async (req, res) => {
-  if (!JOBS_TABLE) return res.status(500).json({ error: "JOBS_TABLE not configured" });
+  if (!JOBS_TABLE) {
+    return res.status(500).json({ error: "JOBS_TABLE not configured" });
+  }
+
   const { id } = req.params;
 
   try {
+    // Use authenticated user's email (or fallback)
+    const userKey = req.user?.email || "anonymous";
+
     const out = await dynamodb.send(new GetItemCommand({
       TableName: JOBS_TABLE,
       Key: {
-  "qut-username": { S: out.Item["qut-username"].S }, // or req.user.email if auth is applied
-  "username": { S: id }
-},
+        "qut-username": { S: userKey }, // HASH key
+        "username": { S: id },          // RANGE key
+      },
     }));
 
-    if (!out.Item) return res.status(404).json({ error: "Job not found" });
+    if (!out.Item) {
+      return res.status(404).json({ error: "Job not found" });
+    }
 
     const item = out.Item;
     const status = item.status?.S || "unknown";
     const inputKey = item.inputKey?.S || null;
     const outputKeys = (item.outputKeys?.L || []).map(x => x.S);
 
-    return res.json({ jobId: id, status, inputKey, outputKeys });
+    return res.json({
+      jobId: id,
+      status,
+      inputKey,
+      outputKeys,
+    });
   } catch (err) {
     console.error("[getResult] error:", err);
     return res.status(500).json({ error: "Failed to fetch result" });
   }
 };
+
 
 /**
  * GET /results/:id/download — Presigned URLs for all outputs
