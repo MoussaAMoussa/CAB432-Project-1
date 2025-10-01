@@ -1,5 +1,5 @@
 // src/middlewares/authMiddleware.js
-const { getAccessVerifier } = require("../services/cognito"); 
+const { getAccessVerifier } = require("../utils/cognito"); 
 
 exports.requireAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization || "";
