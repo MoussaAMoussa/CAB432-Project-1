@@ -14,8 +14,8 @@ Overview
 ------------------------------------------------
 
 - **Name:** Moss Murphy
-- **Student number:** n11988819
-- **Partner name (if applicable):** YourPartner NameHere
+- **Student number:** n11988819, n11585820
+- **Partner name (if applicable):** Ahmed Moussa
 - **Application name:** CAB432-Project-1
 - **Two line description:** An audio file code transcoder, change audio file size 
 - **EC2 instance name or ID:** i-0d701d561095880b3 
