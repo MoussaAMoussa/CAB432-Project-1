@@ -72,11 +72,13 @@ Overview
 
 ### Core - Statelessness //DO THIS PLEASE
 
-- **What data is stored within your application that is not stored in cloud data services?:** [eg. intermediate video files that have been transcoded but not stabilised]
-- **Why is this data not considered persistent state?:** [eg. intermediate files can be recreated from source if they are lost]
-- **How does your application ensure data consistency if the app suddenly stops?:** [eg. journal used to record data transactions before they are done.  A separate task scans the journal and corrects problems on startup and once every 5 minutes afterwards. ]
+- **What data is stored within your application that is not stored in cloud data services?:** Temporary in-memory job entries are stored in the jobStore.js Map while a request is being processed. These entries include the job ID, current status (e.g., “processing”), and a reference to the file being worked on. No user files or long-term data are kept locally.
+- **Why is this data not considered persistent state?:** This in-memory data is only needed during live request handling. If the application stops, all job state can be fully reconstructed from S3 (which stores the raw and processed audio files) and DynamoDB (which stores job metadata). Since the same results can be recreated and no unique information is lost, this data is not persistent state.
+- **How does your application ensure data consistency if the app suddenly stops?:** Consistency is maintained because the sources of truth — audio files in S3 and job records in DynamoDB — are both durable and independent of the application runtime. If the app stops mid-process, incomplete jobs remain marked as “processing” in DynamoDB and can be retried or safely ignored. This means that once the service is restarted, the cloud data services hold the latest consistent state.
 - **Relevant files:**
-    -
+    src/services/jobStore.js 
+    src/services/audioService.js 
+    src/controllers/processingController.js 
 
 ### Graceful handling of persistent connections
 
