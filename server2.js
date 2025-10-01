@@ -28,10 +28,10 @@ app.use("/api/v1", processingRoutes);
 
 // Signup endpoint
 app.post("/api/v1/signup", async (req, res, next) => { 
-  const { username, password, email } = req.body;
+  const { username, password, email, usertype = "user" } = req.body;
   try {
-    const result = await signup(username, password, email, "user");
-    res.json({ message: "User signed up successfully", result });
+    const result = await signup(username, password, email, usertype);
+    res.json({ message: '${usertype} signed up successfully', result });
   } catch (err) {
     console.error(err);
     res.status(400).json({ error: err.message });
@@ -55,13 +55,16 @@ app.post("/api/v1/confirm", async (req, res, next) => {
 app.post("/api/v1/login", async (req, res, next) => {
   const { username, password } = req.body;
   try {
-    const result = await authenticate(username, password);
-    if (usertype === "admin") {
-      res.json({ message: "Admin user authenticated successfully", result });
-    } else {
-      res.json({ message: "User authenticated successfully", result });
+    const {IdToken, AcsessToken} = await authenticate(username, password);
+    const decode = JSON.parse(Buffer.from(IdToken.split('.')[1], 'base64').toString());
+    const groups = decode["cognito:groups"] || [];
+
+    if (groups.includes("admin")) {
+      res.json({ message: "Admin login successful", result: { IdToken, AccessToken } });
+    } else {  
+      res.json({ message: "User login successful", result: { IdToken, AccessToken } });
     }
-    } catch (err) {
+  } catch (err) {
     console.error(err);
     res.status(400).json({ error: err.message });
   }
