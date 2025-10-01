@@ -53,13 +53,15 @@ exports.processFile = async (req, res) => {
       await dynamodb.send(new PutItemCommand({
         TableName: JOBS_TABLE,
         Item: {
-          jobId:      { S: jobId },
-          userId:     { S: (req.user?.id || req.user?.sub || "anonymous") }, // works with local JWT or Cognito
-          status:     { S: "processing" },
-          inputKey:   { S: inputKey },
-          outputKeys: { L: [] },
-          createdAt:  { S: nowISO() },
-          updatedAt:  { S: nowISO() },
+          Item: {
+            "qut-username": { S: req.user?.email || "anonymous" }, // partition key
+            "username": { S: jobId }, // or some unique identifier per user/job
+            status:     { S: "processing" },
+            inputKey:   { S: inputKey },
+            outputKeys: { L: [] },
+            createdAt:  { S: nowISO() },
+            updatedAt:  { S: nowISO() },
+          },
         },
       }));
     }
