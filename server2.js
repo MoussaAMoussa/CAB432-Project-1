@@ -70,10 +70,11 @@ app.post("/api/v1/login", async (req, res, next) => {
   }
 }); 
 
-
-// Admin functionality: Delete user from cognito
-app.delete("/api/v1/admin/delete-user", async (req, res, next) => {
+app.get("/api/v1/admin/check", (req, res) => {
+  res.send("You are an admin!");
 });
+
+
 
 // Health check or catch-all
 app.get("/", (req, res) => {
