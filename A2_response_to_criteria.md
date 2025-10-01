@@ -70,7 +70,7 @@ Overview
 - **Relevant files:**
     -
 
-### Core - Statelessness //DO THIS PLEASE
+### Core - Statelessness 
 
 - **What data is stored within your application that is not stored in cloud data services?:** Temporary in-memory job entries are stored in the jobStore.js Map while a request is being processed. These entries include the job ID, current status (e.g., “processing”), and a reference to the file being worked on. No user files or long-term data are kept locally.
 - **Why is this data not considered persistent state?:** This in-memory data is only needed during live request handling. If the application stops, all job state can be fully reconstructed from S3 (which stores the raw and processed audio files) and DynamoDB (which stores job metadata). Since the same results can be recreated and no unique information is lost, this data is not persistent state.
