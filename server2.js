@@ -55,7 +55,7 @@ app.post("/api/v1/confirm", async (req, res, next) => {
 app.post("/api/v1/login", async (req, res, next) => {
   const { username, password } = req.body;
   try {
-    const {IdToken, AcsessToken} = await authenticate(username, password);
+    const {IdToken, AccessToken} = await authenticate(username, password);
     const decode = JSON.parse(Buffer.from(IdToken.split('.')[1], 'base64').toString());
     const groups = decode["cognito:groups"] || [];
 
